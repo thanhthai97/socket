@@ -7,15 +7,10 @@
 #include<sys/time.h>
 #include<pthread.h>
 #include<arpa/inet.h>
-//#include<string.h>
-//#include<stdio.h>
-//#include<stdlib.h>
 
-/*void sleep(int &ssecond)
-{
-    struct timespec ts = {ssecond,0};
-    nanosleep(&ts,NULL);
-}*/
+#define MAX_BUFF 1024
+#define PORT 8000
+
 void reverse(char str[], int length) 
 { 
     int start = 0; 
@@ -68,7 +63,7 @@ char* itoa(int num, char* str, int base)
   
     return str; 
 } 
-
+//----------------------------------------------------------------------
 int data[2]={0,0};
 pthread_mutex_t sum_lock; // struct for lock the data of the process
 
@@ -92,10 +87,8 @@ void *thread_1(void *arg)
 void *thread_2(void *arg)
 {
     
-    //for(int n=0;n<4;n++){
-    //
     while(true){
-    //int value = sum;
+    
     pthread_mutex_lock(&sum_lock);   // lock the data by mutex
     data[0]=data[1];
     data[1]=sum;
@@ -114,15 +107,14 @@ void *thread_3(void *arg)
     int len;
     struct sockaddr_in address;
     int result;
-    //int ch = 3;
-
+    
     // tao socket cho trinh khach. luu lai so mo ta socket
     sockfd=socket(AF_INET,SOCK_STREAM,0);
     address.sin_family=AF_INET;
     address.sin_addr.s_addr = inet_addr("127.0.0.1");// address of client is 127.0.0.1
-    address.sin_port = htons(8000); // port connect is 8000
-    // gan ten socket tren may chu can ket noi
-    //strcpy(address.sun_path,"server_socket");
+    address.sin_port = htons(PORT); // port connect is 8000
+   
+  
     len =sizeof(address);
     // request the connect to server
     result = connect(sockfd,(struct sockaddr *)&address,len);
@@ -132,13 +124,13 @@ void *thread_3(void *arg)
         exit(EXIT_FAILURE);
     }
     // receive and send data to server after connect
-    char buff[1024];
+    char buff[MAX_BUFF];
     while(true){
         
     pthread_mutex_lock(&sum_lock); // lock the data to use
     itoa(sum,buff,10);
     write(sockfd, buff,sizeof(buff));
-    //read(sockfd, &ch,1);
+    
     printf("thread 3 write on server %d\n",sum);
     
     pthread_mutex_unlock(&sum_lock); // unlock data
@@ -155,15 +147,15 @@ void *thread_4(void *arg)
     int len;
     struct sockaddr_in address;
     int result;
-    //int ch = 3;
+    
 
     // tao socket cho trinh khach. luu lai so mo ta socket
     sockfd=socket(AF_INET,SOCK_STREAM,0);
     address.sin_family=AF_INET;
-    address.sin_addr.s_addr = inet_addr("192.168.1.10"); // address of client is 192.168.1.10
-    address.sin_port = htons(8000); // port connect to server is 8000
+    address.sin_addr.s_addr = inet_addr("192.168.81.12"); // address of client is 192.168.1.10
+    address.sin_port = htons(PORT); // port connect to server is 8000
     // gan ten socket tren may chu can ket noi
-    //strcpy(address.sun_path,"server_socket");
+    
     len = sizeof(address);
     // request the connect to server
     result = connect(sockfd,(struct sockaddr *)&address,len);
@@ -173,7 +165,7 @@ void *thread_4(void *arg)
         exit(EXIT_FAILURE);
     }
     // after connect, read/write data to server
-    char buffer[1024];
+    char buffer[MAX_BUFF];
     // always send data 
     while(true){
         
@@ -181,7 +173,7 @@ void *thread_4(void *arg)
     
     itoa(ran100,buffer,10);
     write(sockfd, buffer,sizeof(buffer));
-    //read(sockfd, &ch,1);
+    
     printf("thread 4 write on server %d\n",ran100);
     
     //pthread_mutex_unlock(&sum_lock);
