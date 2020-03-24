@@ -169,12 +169,12 @@ void *thread_4(void *arg)
     // always send data 
     while(true){
         
-    int ran100 = rand()%100 +1;
+    int random100 = rand()%100 +1;
     
-    itoa(ran100,buffer,10);
+    itoa(random100,buffer,10);
     write(sockfd, buffer,sizeof(buffer));
     
-    printf("thread 4 write on server %d\n",ran100);
+    printf("thread 4 write on server %d\n",random100);
     
     //pthread_mutex_unlock(&sum_lock);
     sleep(1);
@@ -236,5 +236,5 @@ int main()
    pthread_join(d_thread,&thread_result);
    // destroy the mutex locked data
    pthread_mutex_destroy(&sum_lock);
-    
+
 }
