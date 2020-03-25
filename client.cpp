@@ -11,6 +11,7 @@
 #define MAX_BUFF 1024
 #define PORT 8000
 
+// Void create function itoa for linux----------------------------------------------
 void reverse(char str[], int length) 
 { 
     int start = 0; 
@@ -63,19 +64,19 @@ char* itoa(int num, char* str, int base)
   
     return str; 
 } 
-//----------------------------------------------------------------------
+//-------------------------------------------------------------------------
 int data[2]={0,0};
 pthread_mutex_t sum_lock; // struct for lock the data of the process
-
 int sum=0;
-// create thread 1 is pointer
-void *thread_1(void *arg)
+
+// create void thread random from 1 t0 10 after 1 second is pointer
+void *thread_random10(void *arg)
 {
     
     while(true){
         pthread_mutex_lock(&sum_lock);
         sum += (rand()%10 +1);
-        std::cout<<"Sum hien tai = "<<sum<<std::endl;
+        std::cout<<"Current sum = "<<sum<<std::endl;
        
         pthread_mutex_unlock(&sum_lock);
         sleep(1); 
@@ -83,8 +84,8 @@ void *thread_1(void *arg)
 }
     
     
-// create thread 2 is pointer
-void *thread_2(void *arg)
+// create void thread calculate sum of random value after 1 second is pointer
+void *thread_calculated_sum(void *arg)
 {
     
     while(true){
@@ -92,19 +93,19 @@ void *thread_2(void *arg)
     pthread_mutex_lock(&sum_lock);   // lock the data by mutex
     data[0]=data[1];
     data[1]=sum;
-    std::cout<<"Average = "<<(double)(data[1]-data[0])/5<<std::endl;
+    std::cout<<"Average after 5  second = "<<(double)(data[1]-data[0])/5<<std::endl;
     pthread_mutex_unlock(&sum_lock); // unlock data
     sleep(5);
     }
     
 }
-// function for thread 3 is pointer
-void *thread_3(void *arg)
+// function for thread send data to server after 5 seconds is pointer
+void *thread_share_data(void *arg)
 {
     
     
     int sockfd;
-    int len;
+    int lensock;
     struct sockaddr_in address;
     int result;
     
@@ -115,31 +116,31 @@ void *thread_3(void *arg)
     address.sin_port = htons(PORT); // port connect is 8000
    
   
-    len =sizeof(address);
+    lensock =sizeof(address);
     // request the connect to server
-    result = connect(sockfd,(struct sockaddr *)&address,len);
+    result = connect(sockfd,(struct sockaddr *)&address,lensock);
     if(result == -1)
     {
-        perror("oops: client1 problem");
+        perror("oops: client share data problem");
         exit(EXIT_FAILURE);
     }
     // receive and send data to server after connect
     char buff[MAX_BUFF];
     while(true){
         
-    pthread_mutex_lock(&sum_lock); // lock the data to use
-    itoa(sum,buff,10);
-    write(sockfd, buff,sizeof(buff));
-    
-    printf("thread 3 write on server %d\n",sum);
-    
-    pthread_mutex_unlock(&sum_lock); // unlock data
-    sleep(5);
+        pthread_mutex_lock(&sum_lock); // lock the data to use
+        itoa(sum,buff,10);
+        write(sockfd, buff,sizeof(buff));
+        
+        printf("thread share data send to server %d\n",sum);
+        
+        pthread_mutex_unlock(&sum_lock); // unlock data
+        sleep(5);
     }
     close(sockfd); //close client
 }
-// create thread 4 is pointer of function 4
-void *thread_4(void *arg)
+// create thread random from 1 to 100 and send data to server after 1 second is pointer of function
+void *thread_random100(void *arg)
 {
     
     //pthread_mutex_lock(&sum_lock);
@@ -152,7 +153,7 @@ void *thread_4(void *arg)
     // tao socket cho trinh khach. luu lai so mo ta socket
     sockfd=socket(AF_INET,SOCK_STREAM,0);
     address.sin_family=AF_INET;
-    address.sin_addr.s_addr = inet_addr("192.168.81.12"); // address of client is 192.168.1.10
+    address.sin_addr.s_addr = inet_addr("192.168.81.12"); // address IP of client
     address.sin_port = htons(PORT); // port connect to server is 8000
     // gan ten socket tren may chu can ket noi
     
@@ -161,7 +162,7 @@ void *thread_4(void *arg)
     result = connect(sockfd,(struct sockaddr *)&address,len);
     if(result == -1)
     {
-        perror("oops: client2 problem");
+        perror("oops: client random 100 problem");
         exit(EXIT_FAILURE);
     }
     // after connect, read/write data to server
@@ -169,15 +170,15 @@ void *thread_4(void *arg)
     // always send data 
     while(true){
         
-    int random100 = rand()%100 +1;
-    
-    itoa(random100,buffer,10);
-    write(sockfd, buffer,sizeof(buffer));
-    
-    printf("thread 4 write on server %d\n",random100);
-    
-    //pthread_mutex_unlock(&sum_lock);
-    sleep(1);
+        int random100 = rand()%100 +1;
+        
+        itoa(random100,buffer,10);
+        write(sockfd, buffer,sizeof(buffer));
+        
+        printf("thread random 100 send data server %d\n",random100);
+        
+        //pthread_mutex_unlock(&sum_lock);
+        sleep(1);
     }
     //close the client
     close(sockfd);
@@ -187,53 +188,53 @@ int main()
 {
    std::cout<<"PID process client running: "<<(int)getpid()<<std::endl;
    // 
-   pthread_t a_thread;
-   pthread_t b_thread;
-   pthread_t c_thread;
-   pthread_t d_thread;
-   void *thread_result;
-   int thread_num;
+   pthread_t manager_thread_random10;
+   pthread_t manager_thread_calculate;
+   pthread_t manager_thread_sharedata;
+   pthread_t manager_thread_random100;
+   void *thread_retval;
+   int thread_check;
    // init the mutex
-   thread_num=pthread_mutex_init(&sum_lock,NULL);
-   if(thread_num!=0)
+   thread_check=pthread_mutex_init(&sum_lock,NULL);
+   if(thread_check!=0)
    {
        perror("Thread mutex created error");
        exit(EXIT_FAILURE);
    }
-   // create and call thread 4
-   thread_num=pthread_create(&d_thread,NULL,thread_4,NULL);
-   if(thread_num!=0)
+   // create and call thread random from 1 to 100 and send data after 1 second
+   thread_check=pthread_create(&manager_thread_random100,NULL,thread_random100,NULL);
+   if(thread_check!=0)
    {
        perror("Thread 4 created error");
        exit(EXIT_FAILURE);
    }
-   // create  and call thread 3
-   thread_num=pthread_create(&c_thread,NULL,thread_3,NULL);
-   if(thread_num!=0)
+   // create  and call thread share data to server after 5 seconds
+   thread_check=pthread_create(&manager_thread_sharedata,NULL,thread_share_data,NULL);
+   if(thread_check!=0)
    {
        perror("Thread 3 created error");
        exit(EXIT_FAILURE);
    }
-   // create and call thread 2
-   thread_num=pthread_create(&b_thread,NULL,thread_2,NULL);
-   if(thread_num!=0)
+   // create and call thread calculated sum of random 10 after 1 second
+   thread_check=pthread_create(&manager_thread_calculate,NULL,thread_calculated_sum,NULL);
+   if(thread_check!=0)
    {
        perror("Thread 2 created error");
        exit(EXIT_FAILURE);
    }
-   //create and call thread 1
-   thread_num=pthread_create(&a_thread,NULL,thread_1,NULL);
-   if(thread_num!=0)
+   //create and call thread random from 1 t0 10 after 1 second
+   thread_check=pthread_create(&manager_thread_random10,NULL,thread_random10,NULL);
+   if(thread_check!=0)
    {
        perror("Thread 1 created error");
        exit(EXIT_FAILURE);
    }
    
    // destroy threads was created
-   pthread_join(a_thread,&thread_result);
-   pthread_join(b_thread,&thread_result);
-   pthread_join(c_thread,&thread_result);
-   pthread_join(d_thread,&thread_result);
+   pthread_join(manager_thread_random100,&thread_retval);
+   pthread_join(manager_thread_sharedata,&thread_retval);
+   pthread_join(manager_thread_calculate,&thread_retval);
+   pthread_join(manager_thread_random10,&thread_retval);
    // destroy the mutex locked data
    pthread_mutex_destroy(&sum_lock);
 
