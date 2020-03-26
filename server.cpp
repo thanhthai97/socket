@@ -214,10 +214,12 @@ int main()
                     if(sockfd == client3)
                     {
                         write_on_file_data();
+                        client3 = 0;
                     }
                     else if(sockfd == client4)
                     {
                         write_on_file_random();
+                        client4 = 0;
                     }
                 }
                 
